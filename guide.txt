@@ -1,0 +1,92 @@
+if not isfile("esp.wss") then writefile("esp.wss", game:GetService("HttpService"):GenerateGUID(false)) end
+repeat wait() until isfile("esp.wss") 
+local ApiKey = readfile("esp.wss") 
+print("Your API key is "..syn.crypt.custom.encrypt("aes-cbc",ApiKey,"$nLliCMdi7gcynsFCK9u0aVNdtkNIiZG","Agd34fg13KuKIL2$"))
+setclipboard(syn.crypt.custom.encrypt("aes-cbc",ApiKey,"$nLliCMdi7gcynsFCK9u0aVNdtkNIiZG","Agd34fg13KuKIL2$"))
+local PubKey = syn.crypt.custom.encrypt("aes-cbc",ApiKey,"$nLliCMdi7gcynsFCK9u0aVNdtkNIiZG","Agd34fg13KuKIL2$")
+
+----------- Beginning ^^
+
+----------------------------------
+
+-- initial message decrypt vv
+m = syn.crypt.custom.decrypt("aes-cbc",m,PubKey:sub(1,32),"Agd34fg13KuKIL2$")
+
+-- key decrypt and check
+m = m:split(":")
+local k = m[1] -- the key
+local f = m[2] -- the function
+
+k = syn.crypt.custom.decrypt("aes-cbc",k,"$nLliCMdi7gcynsFCK9u0aVNdtkNIiZG","Agd34fg13KuKIL2$")
+if k == ApiKey then
+
+-----------------------------------------------
+
+---| the js file |---
+const crypto = require('crypto');
+//const ENC_KEY = "bf3c199c2470cb477d907b1e0917c17b"; // set random encryption key
+const IV = "Agd34fg13KuKIL2$"; // set random initialisation vector
+// IV can be generated as crypto.randomBytes(32).toString('hex');
+
+
+const port = 4000
+const http = require('http');
+const fs = require('fs');
+const WebSocket = require('ws');
+//const rateLimit = require('ws-rate-limit')('10s', 4) //-- optional ratelimit
+
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
+var ips = [] // ip connection list
+
+wss.on('connection', function connection(ws, req) {
+  console.log("connection from "+req.socket.remoteAddress);
+  fs.appendFile("clogs.txt", req.socket.remoteAddress+`\n`, (err) => { if (err) throw err; })
+  //rateLimit(ws);
+  const ip = req.socket.remoteAddress;
+  if (ips.includes(ip)) {
+    ws.close();
+    return;
+  } else {
+    ips.push(ip);
+  }
+  ws.on('message', function incoming(data) {
+    console.log("recieved message")
+    fs.appendFile("logs.txt", data+'\n', (err) => { if (err) throw err; })
+    if (data.length > 1000) { return; }
+    wss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+	console.log(data)
+       var a = data.split(":")
+	console.log(a)
+       console.log(a[0])
+       console.log(a[0].substr(0,32))
+       var ENC_KEY = a[0].substr(0,32)
+var encrypt = ((val) => {
+  let cipher = crypto.createCipheriv('aes-256-cbc', ENC_KEY, IV);
+  let encrypted = cipher.update(val, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encrypted;
+});
+	console.log(ENC_KEY+" < enc key")
+	client.send(encrypt(data)) // send data back
+
+
+//client !== ws //do not uncomment lol
+      }
+    });
+  });
+  ws.on('close', function close() {
+    ips = ips.filter(item => item !== ip)
+    console.log("disconnecting : "+ip)
+  });
+});
+
+server.listen(port);
+
+----------------------------------------------------------------------------------------| End
+
+AES CBC 256 is used because GCM is retarded.
+FUck GCM all the homies HATE GCM
+CBC > GCM
+
