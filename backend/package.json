@@ -1,0 +1,13 @@
+{
+  "name": "cross-game-chat-master",
+  "version": "1.0.0",
+  "description": "Encrypted websocket cross-game chat with an invite-to-server feature. Only works on Synapse X and Protosmasher for now.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
